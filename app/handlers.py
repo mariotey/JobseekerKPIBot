@@ -5,12 +5,14 @@ from app.services.kpi_service import KPIService
 
 HELP_TEXT = """
 📌 Available Commands
+/help - Show this help message
+/addkpi - Add a new KPI
+/viewkpi - View all KPIs
 
 🟢 KPI Setup
 /addkpi Title | 1 | daily | #tag
 
 🟡 KPI Management
-/editkpi #tag
 /deletekpi #tag
 
 🔵 Usage
@@ -80,3 +82,35 @@ async def add_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Error creating KPI: {e.details}\n\nUse:\n/addkpi Title | 1 | daily | #tag"
         )
         print(e)
+
+
+async def view_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    kpis, user_map = KPIService.get_all_kpis()
+
+    if not kpis:
+        await update.message.reply_text("No KPIs found.")
+        return
+
+    grouped = {}
+
+    for kpi in kpis:
+        user_id = kpi["user_id"]
+        username = user_map.get(user_id, user_id)
+
+        grouped.setdefault(username, []).append(kpi)
+
+    message = "📊 All Users KPIs\n\n"
+
+    for user, user_kpis in grouped.items():
+        message += f"@{user} ({len(user_kpis)} KPIs)\n"
+
+        for idx, kpi in enumerate(user_kpis, 1):
+            message += (
+                f"{idx}. {kpi['title']} "
+                f"({kpi['target']}/{kpi['frequency']}) "
+                f"{kpi['tag']}\n"
+            )
+
+        message += "\n"
+
+    await update.message.reply_text(message)

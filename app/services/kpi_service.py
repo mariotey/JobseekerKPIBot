@@ -52,3 +52,22 @@ class KPIService:
         }).execute()
 
         msg = f"🎯 KPI Created\n{tag} — {title} ({target}/{frequency})\n"
+
+    @staticmethod
+    def get_all_kpis():
+        kpis = (
+            supabase.table(KPI_TABLE)
+            .select("*")
+            .eq("deleted", False)
+            .execute()
+        ).data
+
+        users = response = (
+            supabase.table(USER_TABLE)
+            .select("*")
+            .execute()
+        ).data
+
+        user_map = {u["id"]: u.get("username", u["id"]) for u in users}
+
+        return kpis, user_map
