@@ -1,7 +1,9 @@
+import re
 from telegram import Update
 from telegram.ext import ContextTypes
 
 from app.services.kpi_service import KPIService
+from app.services.submission_service import SubmissionService
 
 HELP_TEXT = """
 📌 Available Commands
@@ -146,3 +148,31 @@ async def delete_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         print(e)
         await update.message.reply_text("Error deleting KPI")
+
+async def detect_submission(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(f"'/detect_submission command received\n")
+
+    msg = update.message
+
+    if not msg or not msg.text:
+        return
+
+    text = msg.text
+    user = update.effective_user
+
+    # extract hashtags (supports multiple later)
+    tags = re.findall(r"#\w+", text)
+
+    if not tags:
+        return  # ignore normal messages
+
+    for tag in tags:
+        SubmissionService.create_submission(
+            user_id=user.id,
+            kpi_tag=tag,
+            message=text
+        )
+
+        await update.message.reply_text(
+            f"📌 Recorded submission for {tag}"
+        )
