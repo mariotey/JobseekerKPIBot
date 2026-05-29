@@ -8,7 +8,6 @@ HELP_TEXT = """
 
 🟢 KPI Setup
 /addkpi Title | 1 | daily | #tag
-/kpi
 
 🟡 KPI Management
 /editkpi #tag

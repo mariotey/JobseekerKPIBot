@@ -2,7 +2,6 @@ from app.database import supabase
 from app.config import USER_TABLE, KPI_TABLE, SUBMISSION_TABLE
 
 class KPIService:
-
     @staticmethod
     def register_user(user):
         user_id = str(user.id)
