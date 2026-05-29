@@ -8,6 +8,7 @@ HELP_TEXT = """
 /help - Show this help message
 /addkpi - Add a new KPI
 /viewkpi - View all KPIs
+/deletekpi - Delete a KPI (only for the user who created it)
 
 🟢 KPI Setup
 /addkpi Title | 1 | daily | #tag
