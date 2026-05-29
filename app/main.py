@@ -1,5 +1,5 @@
 """
-uv run python -m app.main
+python -m app.main
 """
 from telegram.ext import (
     ApplicationBuilder,
@@ -7,14 +7,8 @@ from telegram.ext import (
     MessageHandler,
     filters
 )
-
 from app.config import BOT_TOKEN
-from app.handlers import (
-    add_kpi,
-    list_kpis,
-    detect_submission
-)
-from app.scheduler import setup_scheduler
+from app.handlers import help_handler, add_kpi
 
 # Store seen chat IDs in memory
 seen_chats = set()
@@ -31,22 +25,10 @@ app = ApplicationBuilder().token(BOT_TOKEN).build()
 
 # Listen to ALL messages in group
 app.add_handler(
-    MessageHandler(filters.ALL, print_group_id)
+    MessageHandler(filters.TEXT & ~filters.COMMAND, print_group_id)
 )
-
-# app.add_handler(CommandHandler("addkpi", add_kpi))
-# app.add_handler(CommandHandler("kpi", list_kpis))
-# app.add_handler(
-#     MessageHandler(
-#         filters.TEXT | filters.PHOTO,
-#         detect_submission
-#     )
-# )
-
-# def post_init(application):
-#     setup_scheduler(application)
-
-# app.post_init = post_init
+app.add_handler(CommandHandler("help", help_handler))
+app.add_handler(CommandHandler("addkpi", add_kpi))
 
 if __name__ == "__main__":
     print("Bot started...")

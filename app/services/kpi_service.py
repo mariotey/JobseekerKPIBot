@@ -1,102 +1,55 @@
-from datetime import datetime, timedelta
 from app.database import supabase
-
+from app.config import USER_TABLE, KPI_TABLE, SUBMISSION_TABLE
 
 class KPIService:
 
     @staticmethod
-    def register_user(
-        user_id: int,
-        username: str
-    ):
+    def register_user(user):
+        user_id = str(user.id)
+        username = str(user.username)
+
+        existing = supabase.table(USER_TABLE) \
+            .select("*") \
+            .eq("id", user_id) \
+            .execute()
+
+        if existing.data:
+            print(f"User already exists, skipping registration: {user_id}\n")
+            return
+
+        supabase.table(USER_TABLE).insert({
+            "id": user_id,
+            "username": username
+        }).execute()
+
+        print(f"Registered new user: {user_id} - {username}\n")
+
+    @staticmethod
+    def create_kpi(user, title, target, frequency, tag):
+        user_id = str(user.id)
+        username = str(user.username)
+
         existing = (
-            supabase.table("users")
-            .select("*")
+            supabase.table(KPI_TABLE)
+            .select("id")
             .eq("user_id", user_id)
+            .eq("tag", tag)
             .execute()
         )
 
         if existing.data:
-            return
+            msg = f"KPI tag already exists for {username}! Use another tag!\n"
+            print(msg)
+            return msg
 
-        supabase.table("users").insert({
+        # insert KPI
+        supabase.table(KPI_TABLE).insert({
             "user_id": user_id,
-            "username": username
+            "title": title,
+            "target": target,
+            "frequency": frequency,
+            "tag": tag,
+            "deleted": False
         }).execute()
 
-    @staticmethod
-    def create_kpi(
-        user_id,
-        title,
-        target,
-        frequency,
-        tag
-    ):
-        return (
-            supabase.table("kpis")
-            .insert({
-                "user_id": user_id,
-                "title": title,
-                "target": target,
-                "frequency": frequency,
-                "tag": tag.lower()
-            })
-            .execute()
-        )
-
-    @staticmethod
-    def get_user_kpis(
-        user_id
-    ):
-        return (
-            supabase.table("kpis")
-            .select("*")
-            .eq("user_id", user_id)
-            .eq("deleted", False)
-            .execute()
-        )
-
-    @staticmethod
-    def get_kpi_by_tag(
-        user_id,
-        tag
-    ):
-        result = (
-            supabase.table("kpis")
-            .select("*")
-            .eq("user_id", user_id)
-            .eq("tag", tag)
-            .eq("deleted", False)
-            .execute()
-        )
-
-        if not result.data:
-            return None
-
-        return result.data[0]
-
-    @staticmethod
-    def get_progress(
-        kpi
-    ):
-        now = datetime.now()
-
-        if kpi["frequency"] == "daily":
-            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        else:
-            start = datetime.fromisoformat(kpi["created_at"])
-            end = start + timedelta(days=7)
-
-            while end < now:
-                start = end
-                end = start + timedelta(days=7)
-
-        result = (
-            supabase.table("submissions")
-            .select("*")
-            .eq("kpi_id", kpi["id"])
-            .gte("created_at", start.isoformat())
-            .execute()
-        )
-
-        return min(len(result.data), kpi["target"])
+        msg = f"🎯 KPI Created\n{tag} — {title} ({target}/{frequency})\n"
