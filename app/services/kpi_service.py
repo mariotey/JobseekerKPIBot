@@ -71,3 +71,26 @@ class KPIService:
         user_map = {u["id"]: u.get("username", u["id"]) for u in users}
 
         return kpis, user_map
+
+    @staticmethod
+    def delete_kpi(user_id, tag):
+
+        response = (
+            supabase.table(KPI_TABLE)
+            .update({"deleted": True})
+            .eq("user_id", user_id)
+            .eq("tag", tag)
+            .eq("deleted", False)
+            .execute()
+        )
+
+        if not response.data:
+            return {
+                "success": False,
+                "message": "KPI not found"
+            }
+
+        return {
+            "success": True,
+            "data": response.data[0]
+        }

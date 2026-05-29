@@ -25,6 +25,7 @@ Daily report is automatic at 23:59 SGT
 
 async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("'/help command received\n")
+
     if not update.message:
         return
 
@@ -32,8 +33,6 @@ async def help_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def add_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"'/addkpi command received\n")
-    print(f"{update}\n")
-    print(f"{context}\n")
 
     user = update.effective_user
     text = update.message.text
@@ -85,6 +84,8 @@ async def add_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def view_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(f"'/viewkpi command received\n")
+
     kpis, user_map = KPIService.get_all_kpis()
 
     if not kpis:
@@ -114,3 +115,33 @@ async def view_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message += "\n"
 
     await update.message.reply_text(message)
+
+
+async def delete_kpi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print(f"'/deletekpi command received\n")
+
+    user = update.effective_user
+    text = update.message.text
+
+    try:
+        tag = text.replace("/deletekpi", "").strip().lower()
+
+        if not tag.startswith("#"):
+            await update.message.reply_text("Tag must start with #")
+            return
+
+        result = KPIService.delete_kpi(str(user.id), tag)
+
+        if not result["success"]:
+            await update.message.reply_text(f"❌ KPI not found: {tag}")
+            return
+
+        kpi = result["data"]
+
+        await update.message.reply_text(
+            f"✅ KPI deleted: {tag} — {kpi['title']}"
+        )
+
+    except Exception as e:
+        print(e)
+        await update.message.reply_text("Error deleting KPI")
